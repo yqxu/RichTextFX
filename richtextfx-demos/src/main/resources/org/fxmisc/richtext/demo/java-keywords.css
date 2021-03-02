@@ -1,12 +1,20 @@
+
+.debug-line{
+    -fx-background-color: #161661;
+}
+
 .keyword {
-    -fx-fill: purple;
+    -fx-fill: peru;
     -fx-font-weight: bold;
+}
+.normal {
+    -fx-fill: #aaaaaa;
 }
 .semicolon {
     -fx-font-weight: bold;
 }
 .paren {
-    -fx-fill: firebrick;
+    -fx-fill: #e8c683;
     -fx-font-weight: bold;
 }
 .bracket {
@@ -18,13 +26,15 @@
     -fx-font-weight: bold;
 }
 .string {
-    -fx-fill: blue;
+    -fx-fill: darkgreen;
 }
 
 .comment {
 	-fx-fill: cadetblue;
 }
-
+.builtins {
+    -fx-fill: #9e619e;
+}
 .paragraph-box:has-caret {
-    -fx-background-color: #f2f9fc;
+    -fx-background-color: #404040;
 }

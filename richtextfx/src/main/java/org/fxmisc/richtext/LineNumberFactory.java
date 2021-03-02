@@ -29,10 +29,10 @@ import org.reactfx.value.Val;
 public class LineNumberFactory<PS> implements IntFunction<Node> {
 
     private static final Insets DEFAULT_INSETS = new Insets(0.0, 5.0, 0.0, 5.0);
-    private static final Paint DEFAULT_TEXT_FILL = Color.web("#666");
+    private static final Paint DEFAULT_TEXT_FILL = Color.web("#606060");
     private static final Font DEFAULT_FONT = Font.font("monospace", FontPosture.ITALIC, 13);
     private static final Font DEFAULT_FOLD_FONT = Font.font("monospace", FontWeight.BOLD, 13);
-    private static final Background DEFAULT_BACKGROUND = new Background(new BackgroundFill(Color.web("#ddd"), null, null));
+    private static final Background DEFAULT_BACKGROUND = new Background(new BackgroundFill(Color.web("#424242"), null, null));
 
     public static IntFunction<Node> get(GenericStyledArea<?, ?, ?> area) {
         return get(area, digits -> "%1$" + digits + "s");
@@ -112,8 +112,8 @@ public class LineNumberFactory<PS> implements IntFunction<Node> {
 
         if ( isFoldedCheck != null )
         {
-            Label foldIndicator = new Label( " " );
-            foldIndicator.setTextFill( Color.BLUE ); // Prevents CSS errors
+            Label foldIndicator = new Label( "  " );
+            foldIndicator.setTextFill( Color.YELLOW ); // Prevents CSS errors
             foldIndicator.setFont( DEFAULT_FOLD_FONT );
 
             lineNo.setContentDisplay( ContentDisplay.RIGHT );
@@ -128,7 +128,7 @@ public class LineNumberFactory<PS> implements IntFunction<Node> {
                     ));
                     foldIndicator.getStyleClass().add( "fold-indicator" );
                     foldIndicator.setCursor( Cursor.HAND );
-                    foldIndicator.setText( "+" );
+                    foldIndicator.setText( " +" );
                 }
             }
         }
