@@ -8,12 +8,15 @@ import java.util.Map;
 public class CodeStrParser implements LineParser {
 
     @Override
-    public Map<String, Object> parse(String str) {
-        Map<String,Object> ret = new HashMap<>();
+    public String parse(String str) {
         int idx = str.indexOf("-> ") + "-> ".length();
-        ret.put("codeStr",str.substring(idx));
-        return ret;
+        return str.substring(idx);
     }
+
+    @Override public boolean match(String str) {
+        return str.contains("-> ");
+    }
+
     public static CodeStrParser newInstance() {
         CodeStrParser parser = new CodeStrParser();
         return parser;

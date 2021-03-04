@@ -1,17 +1,19 @@
 package org.fxmisc.richtext.demo.pdb;
 
 import org.fxmisc.richtext.demo.pdb.codec.Deserializer;
-import org.fxmisc.richtext.demo.pdb.codec.LineParser;
+import org.fxmisc.richtext.demo.pdb.codec.LineSegment;
 import org.fxmisc.richtext.demo.pdb.commands.Command;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.*;
+import java.util.concurrent.locks.Condition;
 
+import static java.lang.Thread.sleep;
 
-
+/**
+ * @author yq
+ */
 public class Shell implements Closeable{
     volatile boolean stopProcess = false;
     Process process;
@@ -19,9 +21,9 @@ public class Shell implements Closeable{
     InputStream normalResponse;
     OutputStream cmdPipe;
 
-    BlockingQueue<String> responseQ = new ArrayBlockingQueue<String>(30);
-    BlockingQueue<String> errorQ = new ArrayBlockingQueue<String>(30);;
-    BlockingQueue<Deserializer> deserializerQ  = new ArrayBlockingQueue<Deserializer>(60);;
+    BlockingQueue<String> responseQ = new ArrayBlockingQueue<>(30);
+    BlockingQueue<String> errorQ = new ArrayBlockingQueue<>(30);
+    BlockingQueue<Deserializer> deserializerQ  = new ArrayBlockingQueue<>(60);
 
     public BlockingQueue<String> getRespQ(){
         return responseQ;
@@ -51,9 +53,21 @@ public class Shell implements Closeable{
 
 
     public  CompletableFuture<CMDResp>  startWithCmd(Command cmd) {
-        process = exec(cmd);
+        try {
+            process = exec(cmd);
+        } catch (IOException e) {
+            CompletableFuture<CMDResp>  fu = new CompletableFuture();
+            fu.completeExceptionally(e);
+            return fu;
+        }
         cmdPipe = process.getOutputStream();
-        normalResponse = process.getInputStream();
+        try {
+            File file = new File("log.txt");
+            FileInputStream in = new FileInputStream(file);
+            normalResponse = in;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         errorResponse = process.getErrorStream();
         Deserializer de = cmd.newDeserializer();
         BufferedReader reader = new BufferedReader(new InputStreamReader(normalResponse));
@@ -67,21 +81,28 @@ public class Shell implements Closeable{
         CompletableFuture.runAsync(()->{
             try {
                 String line;
-                while(!stopProcess&&(line = reader.readLine()) != null){
-                    responseQ.offer(line);
+                while(true){
+                    boolean readded = false;
+                    while(!stopProcess&&(line = reader.readLine()) != null){
+                        responseQ.put(line);
+                        readded = true;
+                    }
+                    if (readded){
+                        responseQ.put("\n");
+                        readded = false;
+                    }
+                    sleep(500);
                 }
-
             }catch (Exception e){
+                e.printStackTrace();
             }
 
         },  thread);
         CompletableFuture.runAsync(()->{
             try {
                 String line;
-                while(!stopProcess){
-                    while ((line = readerError.readLine()) != null) {
-                        errorQ.offer(line);
-                    }
+                while ((line = readerError.readLine()) != null) {
+                    errorQ.offer(line);
                 }
 
             }catch (Exception e){
@@ -91,26 +112,25 @@ public class Shell implements Closeable{
         CompletableFuture.runAsync(()->{
             while(!stopProcess){
                 try {
+                    List<String> resultLines = new ArrayList<>();
                     String line = responseQ.take();
-                    Deserializer deserializer = deserializerQ.take();
-                    Queue<LineParser> parsers = deserializer.parsers();
-                    if (parsers == null){
-                        deserializer.future().complete(null);
+                    while(true){
+                        resultLines.add(line);
+                        if(LineSegment.needSegment(line,responseQ.peek())){
+                            break;
+                        }
+                        line = responseQ.take();
+                    }
+                    if (resultLines.size()==1&&resultLines.get(0).equals("(Pdb) ")){
                         continue;
                     }
-                    Map<String,Object> resp = new HashMap<>();
-                    do {
-                        LineParser parser = parsers.poll();
-                        if (parser!=null&&line!=null){
-                            resp.putAll(parser.parse(line));
-                        }
-                        if (parsers.peek()!=null){
-                            line = responseQ.poll(100,TimeUnit.MICROSECONDS);
-                        }
-                    }while(parsers.peek()!=null);
-                    CMDResp re = deserializer.parse(resp);
-                    deserializer.future().complete(re);
+                    Deserializer deserializer = deserializerQ.take();
+                    CMDResp resp = deserializer.parse(resultLines);
+                    if (!deserializer.future().isCompletedExceptionally()){
+                        deserializer.future().complete(resp);
+                    }
                 }catch (Exception e){
+                    e.printStackTrace();
                 }
             }
 
@@ -139,20 +159,16 @@ public class Shell implements Closeable{
     }
 
 
-    private static Process exec(Command cmd) {
+    private static Process exec(Command cmd) throws IOException {
 
-        try {
-            return Runtime.getRuntime().exec(cmd.getCMDStr());
-        } catch (IOException e) {
-            return null;
-        }
+        return Runtime.getRuntime().exec(cmd.getCMDStr());
     }
 
     @Override
     public void close() throws IOException {
         this.stopProcess = true;
         process.getOutputStream().close();
-        process.getInputStream().close();
+        normalResponse.close();
         process.getErrorStream().close();
     }
 }

@@ -19,8 +19,8 @@ public class PDBShell {
         return shell;
     }
 
-    public static String defaultDebugCmd = "python3.9 -m pdb";
-    public static String testFile = "test.py -stdin=log";
+    public static String defaultDebugCmd = "python3.9 gdpdb.py";
+    public static String testFile = "test.py";
 
     public static PDBShell starDebug(String location)  {
         PDBShell pdbShell = new PDBShell();
@@ -74,23 +74,52 @@ public class PDBShell {
 
     public static void main(String args[]){
         PDBShell pdbShell =  PDBShell.starDebug(testFile);
-        CompletableFuture<CMDStep.StepResp> resp = pdbShell.step();
-        CompletableFuture fu = resp.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-        fu = fu.thenRun(()->pdbShell.next());
-//        shell.print();
-//        System.out.println("where\n");
-//        shell.where();
-//        System.out.println("next\n");
-//        shell.next();
-//        System.out.println("continue\n");
-//        shell.continueExe();
+        CompletableFuture<CMDStep.StepResp> resp2 = pdbShell.step();
+        System.out.println("CMD step");
+        System.out.println(resp2.join().getCodeStr());
+
+        CompletableFuture<CMDNext.NextResp> resp = pdbShell.next();
+        System.out.println("CMD next");
+        System.out.println(resp.join().getCodeStr());
+        System.out.println(resp.join().getCodeLocation().getLineNumber());
+        System.out.println(resp.join().getCodeLocation().getFilePath());
+
+        resp = pdbShell.next();
+        System.out.println("CMD next");
+        System.out.println(resp.join().getCodeStr());
+        System.out.println(resp.join().getCodeLocation().getLineNumber());
+        System.out.println(resp.join().getCodeLocation().getFilePath());
+
+        resp = pdbShell.next();
+        System.out.println("CMD next");
+        System.out.println(resp.join().getCodeStr());
+
+        System.out.println(resp.join().getCodeLocation().getLineNumber());
+        System.out.println(resp.join().getCodeLocation().getFilePath());
+
+        resp = pdbShell.next();
+        System.out.println("CMD next");
+        System.out.println(resp.join().getCodeStr());
+
+        System.out.println(resp.join().getCodeLocation().getLineNumber());
+        System.out.println(resp.join().getCodeLocation().getFilePath());
+
+        resp = pdbShell.next();
+        System.out.println("CMD next");
+        System.out.println(resp.join().getCodeStr());
+
+        System.out.println(resp.join().getCodeLocation().getLineNumber());
+        System.out.println(resp.join().getCodeLocation().getFilePath());
+
+        resp = pdbShell.next();
+        System.out.println("CMD next");
+        System.out.println(resp.join().getCodeStr());
+        System.out.println(resp.join().getCodeLocation().getLineNumber());
+        System.out.println(resp.join().getCodeLocation().getFilePath());
+
+        int respQSize = pdbShell.getShell().responseQ.size();
+        int desQSize = pdbShell.getShell().deserializerQ.size();
+        System.out.println(respQSize == desQSize && respQSize == 0);
 
     }
 }

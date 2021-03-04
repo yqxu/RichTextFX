@@ -9,8 +9,7 @@ public class CodeLocationParser implements LineParser {
 
     //(Pdb) > /Users/yq/Documents/RichTextFX/test.py(2)<module>()
     @Override
-    public Map<String, Object> parse(String str) {
-        Map<String,Object> ret = new HashMap<>();
+    public CodeLocation parse(String str) {
         CodeLocation codeLocation = new CodeLocation();
         int idxFileStart = str.indexOf("> ")+1;
         int idxFileEnd = str.indexOf("(",idxFileStart);
@@ -18,8 +17,11 @@ public class CodeLocationParser implements LineParser {
         int idxLineNumberEnd = str.indexOf(")",idxLineNumberStart);
         codeLocation.setFilePath(str.substring(idxFileStart,idxFileEnd));
         codeLocation.setLineNumber(Long.parseLong(str.substring(idxLineNumberStart,idxLineNumberEnd)));
-        ret.put("codeLocation",codeLocation);
-        return ret;
+        return codeLocation;
+    }
+
+    @Override public boolean match(String str) {
+        return str.contains("> ");
     }
 
     public static CodeLocationParser newInstance() {

@@ -1,10 +1,7 @@
 package org.fxmisc.richtext.demo.pdb.commands;
 
 import org.fxmisc.richtext.demo.pdb.CMDResp;
-import org.fxmisc.richtext.demo.pdb.codec.CodeLocationParser;
-import org.fxmisc.richtext.demo.pdb.codec.CodeStrParser;
-import org.fxmisc.richtext.demo.pdb.codec.Deserializer;
-import org.fxmisc.richtext.demo.pdb.codec.LineParser;
+import org.fxmisc.richtext.demo.pdb.codec.*;
 import org.fxmisc.richtext.demo.pdb.modules.CodeLocation;
 
 import java.util.*;
@@ -13,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class CMDStartDebug implements Command {
 
-    public static String defaultDebugCmd = "python3.9 -m pdb ";
+    public static String defaultDebugCmd = "python3.9 gdpdb.py ";
 
     String fileLocation;
 
@@ -42,6 +39,7 @@ public class CMDStartDebug implements Command {
     }
 
     public class StartDebugResp implements CMDResp<CMDStartDebug> {
+        String info;
         CodeLocation codeLocation;
         String codeStr;
 
@@ -60,17 +58,43 @@ public class CMDStartDebug implements Command {
         public void setCodeStr(String codeStr) {
             this.codeStr = codeStr;
         }
+
+        public String getInfo() {
+            return info;
+        }
+
+        public void setInfo(String info) {
+            this.info = info;
+        }
     }
 
     public class StartDebugDeserializer implements Deserializer<CMDStartDebug>{
         private CompletableFuture<StartDebugResp> future = new CompletableFuture<>();
 
-        @Override
-        public CMDResp<CMDStartDebug> parse(Map<String, Object> parts) {
-            StartDebugResp startDebugResp = new StartDebugResp();
-            startDebugResp.setCodeLocation((CodeLocation) parts.get("codeLocation"));
-            startDebugResp.setCodeStr((String) parts.get("codeStr"));
-            return startDebugResp;
+
+        @Override public CMDResp<CMDStartDebug> parse(List<String> lines) {
+            StartDebugResp resp = new StartDebugResp();
+            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance();
+            CodeStrParser codeStrParser = CodeStrParser.newInstance();
+            lines.stream().findFirst();
+            int infoEndLineNumber = 0;
+            for (int i = 0; i < lines.size() ; i++) {
+                if (codeLocationParser.match(lines.get(i))){
+                    infoEndLineNumber = i;
+                    break;
+                }
+            }
+            StringBuilder info = new StringBuilder();
+            for (int i = 0; i < infoEndLineNumber; i++ ){
+                info.append(lines.get(i));
+                info.append("\n");
+            }
+            resp.setInfo(info.toString());
+            CodeLocation codeLocation = codeLocationParser.parse(lines.get(infoEndLineNumber));
+            String code =  codeStrParser.parse(lines.get(infoEndLineNumber+1));
+            resp.setCodeStr(code);
+            resp.setCodeLocation(codeLocation);
+            return resp;
         }
 
         @Override
@@ -85,12 +109,5 @@ public class CMDStartDebug implements Command {
             return future;
         }
 
-        @Override
-        public Queue<LineParser> parsers() {
-            Queue ret = new LinkedList();
-            ret.offer(CodeLocationParser.newInstance());
-            ret.offer(CodeStrParser.newInstance());
-            return ret;
-        }
     }
 }

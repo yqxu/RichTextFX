@@ -8,10 +8,12 @@ import org.fxmisc.richtext.demo.pdb.codec.LineParser;
 import org.fxmisc.richtext.demo.pdb.modules.CodeLocation;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class CMDNext implements Command {
 
@@ -34,7 +36,7 @@ public class CMDNext implements Command {
     public class NextResp implements CMDResp<CMDNext> {
         CodeLocation codeLocation;
         String codeStr;
-
+        String info;
         public CodeLocation getCodeLocation() {
             return codeLocation;
         }
@@ -50,16 +52,48 @@ public class CMDNext implements Command {
         public void setCodeStr(String codeStr) {
             this.codeStr = codeStr;
         }
+
+        public String getInfo() {
+            return info;
+        }
+
+        public void setInfo(String info) {
+            this.info = info;
+        }
     }
 
     public class NextDeserializer implements Deserializer<CMDNext>{
         private CompletableFuture<NextResp> future = new CompletableFuture<>();
 
-        @Override
-        public CMDResp<CMDNext> parse(Map<String, Object> parts) {
-            NextResp resp = new NextResp();
-            resp.setCodeLocation((CodeLocation) parts.get("codeLocation"));
-            resp.setCodeStr((String) parts.get("codeStr"));
+
+        @Override public CMDResp<CMDNext> parse(List<String> lines) {
+            CMDNext.NextResp resp = new CMDNext.NextResp();
+            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance();
+            CodeStrParser codeStrParser = CodeStrParser.newInstance();
+            lines = lines.stream()
+                         .map(line->line.replaceAll("\n",""))
+                         .filter(line->line!="\n")
+                         .filter(line->!line.isEmpty())
+                         .collect(Collectors.toList());
+            int infoEndLineNumber = 0;
+            for (int i = 0; i < lines.size() ; i++) {
+                if (codeLocationParser.match(lines.get(i))){
+                    infoEndLineNumber = i;
+                    break;
+                }
+            }
+            StringBuilder info = new StringBuilder();
+            for (int i = 0; i < infoEndLineNumber; i++ ){
+                info.append(lines.get(i));
+                info.append("\n");
+            }
+            resp.setInfo(info.toString());
+            CodeLocation codeLocation = codeLocationParser.parse(lines.get(infoEndLineNumber));
+            if (infoEndLineNumber+1<lines.size()){
+                String code =  codeStrParser.parse(lines.get(infoEndLineNumber+1));
+                resp.setCodeStr(code);
+            }
+            resp.setCodeLocation(codeLocation);
             return resp;
         }
 
@@ -75,12 +109,5 @@ public class CMDNext implements Command {
             return future;
         }
 
-        @Override
-        public Queue<LineParser> parsers() {
-            Queue ret = new LinkedList();
-            ret.offer(CodeLocationParser.newInstance());
-            ret.offer(CodeStrParser.newInstance());
-            return ret;
-        }
     }
 }

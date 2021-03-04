@@ -10,9 +10,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 public interface Deserializer<CMD extends Command> {
-    CMDResp<CMD> parse(Map<String,Object> parts);
+    CMDResp<CMD> parse(List<String> lines);
     Exception parseError(String str, BlockingQueue<String> errorQ);
     CompletableFuture<? extends CMDResp<CMD>> future();
-    Queue<LineParser> parsers();
-    
 }
