@@ -45,7 +45,7 @@ import org.reactfx.value.Var;
  * @param <SEG> segment type
  * @param <S> segment style type
  */
-class ParagraphBox<PS, SEG, S> extends Region {
+public class ParagraphBox<PS, SEG, S> extends Region {
 
     /**
      * An opaque class representing horizontal caret offset.
@@ -90,6 +90,14 @@ class ParagraphBox<PS, SEG, S> extends Region {
 
     public final ObservableMap<Selection<PS, SEG, S>, SelectionPath> selectionsProperty() {
         return text.selectionsProperty();
+    }
+
+    public void addStyleClass(String className){
+        this.getStyleClass().add(className);
+    }
+
+    public void removeStyleClass(String className){
+        this.getStyleClass().removeIf((name)->name.equals(className));
     }
 
     ParagraphBox(Paragraph<PS, SEG, S> par, BiConsumer<TextFlow, PS> applyParagraphStyle,

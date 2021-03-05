@@ -11,12 +11,13 @@ public class CodeLocationParser implements LineParser {
     @Override
     public CodeLocation parse(String str) {
         CodeLocation codeLocation = new CodeLocation();
+        str = str.replaceAll("\\(Pdb\\) ","");
         int idxFileStart = str.indexOf("> ")+1;
         int idxFileEnd = str.indexOf("(",idxFileStart);
         int idxLineNumberStart = idxFileEnd + 1;
         int idxLineNumberEnd = str.indexOf(")",idxLineNumberStart);
         codeLocation.setFilePath(str.substring(idxFileStart,idxFileEnd));
-        codeLocation.setLineNumber(Long.parseLong(str.substring(idxLineNumberStart,idxLineNumberEnd)));
+        codeLocation.setLineNumber(Integer.parseInt(str.substring(idxLineNumberStart,idxLineNumberEnd)));
         return codeLocation;
     }
 

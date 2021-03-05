@@ -2,17 +2,20 @@ package org.fxmisc.richtext.demo;
 
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.scene.Cursor;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Scene;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.StackPane;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.*;
+import org.fxmisc.richtext.demo.pdb.PDBShell;
+import org.fxmisc.richtext.demo.pdb.modules.CodeLocation;
 import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.StyleSpan;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyleSpansBuilder;
 import org.reactfx.collection.ListModification;
@@ -26,6 +29,8 @@ import java.util.regex.Pattern;
 
 public class PythonKeywordsDemo extends Application {
 
+
+    PDBShell pdbShell ;
     private static final String[] KEYWORDS = new String[] {
             "and", "as", "assert", "break", "class",
             "continue", "def", "del", "elif", "else", "except",
@@ -78,6 +83,20 @@ public class PythonKeywordsDemo extends Application {
             "    sys.argv[0] = re.sub(r'(-script\\.pyw|\\.exe)?$', '', sys.argv[0])\n" +
             "    sys.exit(main())\n";
 
+    private static String debugCode = "from ast import *\n" + "# This is a sample Python script.\n" + "\n"
+                                      + "# Press ⌃R to execute it or replace it with your code.\n"
+                                      + "# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.\n"
+                                      + "\n" + "\n" + "\n"
+                                      + "# See PyCharm help at https://www.jetbrains.com/help/pycharm/\n"
+                                      + "script = '''\n" + "\n" + "def print_hi(name):\n"
+                                      + "    # Use a breakpoint in the code line below to debug your script.\n"
+                                      + "    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.\n" + "\n"
+                                      + "\n" + "# Press the green button in the gutter to run the script.\n"
+                                      + "if __name__ == '__main__':\n" + "    print_hi('PyCharm')\n"
+                                      + "print(\"aaa test\")\n" + "'''\n" + "\n" + "astwitherror = '''\n"
+                                      + "def print_hi(name):\n" + "    p\n" + "'''\n" + "\n" + "\n"
+                                      + "ast = parse(script)\n" + "\n" + "print(unparse(ast))\n" + "\n";
+
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
             + "|(?<PAREN>" + PAREN_PATTERN + ")"
@@ -98,9 +117,55 @@ public class PythonKeywordsDemo extends Application {
         launch(args);
     }
 
+
+    private volatile int oldDebugLine = 0;
+    private void debugHighLight(CodeLocation codeLocation,CodeArea codeArea){
+        Integer lineNumber = codeLocation.getLineNumber()-1;
+        codeArea.getCell(oldDebugLine).removeStyleClass("debug-line");
+        oldDebugLine = lineNumber;
+        codeArea.getCell(lineNumber.intValue()).addStyleClass("debug-line");
+    }
+
     @Override
     public void start(Stage primaryStage) {
+        Button debug = new Button("Debug");
+        Button step = new Button("Step");
+        Button next = new Button("Next");
+        ToolBar toolBar = new ToolBar(
+                new Button("New"),
+                new Button("Open"),
+                new Button("Save"),
+                new Separator(),
+                new Button("Clean"),
+                new Button("Compile"),
+                new Button("Run"),
+                new Separator(),
+                debug,
+                step,
+                next
+        );
+
         CodeArea codeArea = new CodeArea();
+        debug.setOnMouseClicked( ME ->{
+            if (pdbShell != null){
+                pdbShell.close();
+            }
+            pdbShell = PDBShell.startDebug("test.py");
+        });
+
+        step.setOnMouseClicked( ME ->{
+            if (pdbShell == null){
+                pdbShell = PDBShell.startDebug("test.py");
+            }
+            pdbShell.step().thenAccept(resp->debugHighLight(resp.getCodeLocation(),codeArea));
+        });
+
+        next.setOnMouseClicked( ME ->{
+            if (pdbShell == null){
+                pdbShell = PDBShell.startDebug("test.py");
+            }
+            pdbShell.next().thenAccept(resp->debugHighLight(resp.getCodeLocation(),codeArea));
+        });
 //        codeArea.setStyleSpans();
         // add line numbers to the left of area
         codeArea.setParagraphGraphicFactory(LineNumberFactory.get(codeArea));
@@ -185,13 +250,60 @@ public class PythonKeywordsDemo extends Application {
         });
 
         
-        codeArea.replaceText(0, 0, sampleCode);
-        Scene scene = new Scene(new StackPane(new VirtualizedScrollPane<>(codeArea)), 600, 400);
+        codeArea.replaceText(0, 0, debugCode);
+        //StackPane stackPane =  new StackPane(new VirtualizedScrollPane<>(codeArea));
+        VBox vBox = new VBox();
+        vBox.getChildren().add(toolBar);
+        HBox hBox = new HBox();
+        hBox.setPrefWidth(vBox.getPrefWidth());
+        hBox.setFillHeight(true);
+        StackPane pane = new StackPane(codeArea);
+        TreeView treeView = new TreeView();
+        treeView.setShowRoot(false);
+
+        TreeItem root = new TreeItem();
+        TreeItem<Label> treeItem = new TreeItem<Label>();
+        treeItem.setValue(new Label("test"));
+        TreeItem<Button> treeItem2 = new TreeItem<Button>();
+        treeItem2.setValue(new Button("test2"));
+        TreeItem<String> treeItem3 = new TreeItem<>();
+        treeItem3.setValue("test3");
+        root.getChildren().add(treeItem);
+        root.getChildren().add(treeItem2);
+        root.getChildren().add(treeItem3);
+        treeView.setRoot(root);
+        hBox.getChildren().add(treeView);
+        hBox.getChildren().add(pane);
+        vBox.getChildren().add(hBox);
+
+        //stackPane.setStyle("height:100%");
+        Scene scene = new Scene(vBox, 600, 400);
+        codeArea.setPrefWidth(scene.getWidth());
+        hBox.setPrefHeight(scene.getHeight());
         scene.getStylesheets().add(JavaKeywordsAsyncDemo.class.getResource("java-keywords.css").toExternalForm());
+        scene.getStylesheets().add(JavaKeywordsAsyncDemo.class.getResource("idea-style-tool-bar.css").toExternalForm());
+
         primaryStage.setScene(scene);
         primaryStage.setTitle("Java Keywords Demo");
-//        Platform.runLater(()->codeArea.setTextInsertionStyle(Collections.singleton("normal")));
+        Platform.runLater(()->codeArea.setTextInsertionStyle(Collections.singleton("normal")));
+
+        //pane.setPadding(new Insets(11, 12, 13, 14));
+
         primaryStage.show();
+        primaryStage.widthProperty().addListener(new ChangeListener<Number>() {//监听窗口的宽
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                codeArea.setPrefWidth((Double) newValue);
+            }
+        });
+        primaryStage.heightProperty().addListener(new ChangeListener<Number>() {//监听窗口的高
+            @Override
+            public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+                codeArea.setPrefHeight((Double) newValue);
+                vBox.setPrefHeight((Double) newValue);
+                hBox.setPrefHeight((Double) newValue);
+            }
+        });
     }
 
     private StyleSpans<Collection<String>> computeHighlighting(String text) {

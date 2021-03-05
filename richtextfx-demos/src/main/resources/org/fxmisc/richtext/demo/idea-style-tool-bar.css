@@ -1,0 +1,11 @@
+
+.separator{
+    -fx-background-color: #404040;
+}
+.button {
+    -fx-background-color: #404040;
+    -fx-fill: #aaaaaa;
+}
+.tool-bar {
+    -fx-background-color: #303030;
+}

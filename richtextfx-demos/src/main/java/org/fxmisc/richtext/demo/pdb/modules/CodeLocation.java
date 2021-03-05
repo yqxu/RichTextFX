@@ -4,7 +4,7 @@ import org.fxmisc.richtext.demo.pdb.codec.Deserializer;
 
 public class CodeLocation {
     String filePath;
-    long lineNumber;
+    int lineNumber;
 
     public String getFilePath() {
         return filePath;
@@ -14,11 +14,11 @@ public class CodeLocation {
         this.filePath = filePath;
     }
 
-    public long getLineNumber() {
+    public int getLineNumber() {
         return lineNumber;
     }
 
-    public void setLineNumber(long lineNumber) {
+    public void setLineNumber(int lineNumber) {
         this.lineNumber = lineNumber;
     }
 

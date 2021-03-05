@@ -78,10 +78,12 @@ public class CMDStartDebug implements Command {
             CodeStrParser codeStrParser = CodeStrParser.newInstance();
             lines.stream().findFirst();
             int infoEndLineNumber = 0;
-            for (int i = 0; i < lines.size() ; i++) {
-                if (codeLocationParser.match(lines.get(i))){
-                    infoEndLineNumber = i;
-                    break;
+            if (lines.size() > 2){
+                for (int i = 0; i < lines.size() ; i++) {
+                    if (codeLocationParser.match(lines.get(i))){
+                        infoEndLineNumber = i;
+                        break;
+                    }
                 }
             }
             StringBuilder info = new StringBuilder();

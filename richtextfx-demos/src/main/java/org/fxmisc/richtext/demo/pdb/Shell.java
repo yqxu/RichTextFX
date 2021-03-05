@@ -114,6 +114,16 @@ public class Shell implements Closeable{
                 try {
                     List<String> resultLines = new ArrayList<>();
                     String line = responseQ.take();
+                    if ("\n".equals(line)){
+                        continue;
+                    }
+                    if("(Pdb) ".equals(line)){
+                        String l = responseQ.take();
+                        while ("\n".equals(l)){
+                            l = responseQ.take();
+                        }
+                        line = line + l;
+                    }
                     while(true){
                         resultLines.add(line);
                         if(LineSegment.needSegment(line,responseQ.peek())){
@@ -125,6 +135,7 @@ public class Shell implements Closeable{
                         continue;
                     }
                     Deserializer deserializer = deserializerQ.take();
+                    System.out.println(resultLines);
                     CMDResp resp = deserializer.parse(resultLines);
                     if (!deserializer.future().isCompletedExceptionally()){
                         deserializer.future().complete(resp);
@@ -165,10 +176,14 @@ public class Shell implements Closeable{
     }
 
     @Override
-    public void close() throws IOException {
-        this.stopProcess = true;
-        process.getOutputStream().close();
-        normalResponse.close();
-        process.getErrorStream().close();
+    public void close() {
+        try{
+            this.stopProcess = true;
+            process.getOutputStream().close();
+            normalResponse.close();
+            process.getErrorStream().close();
+        }catch (Exception e){
+            //TODO:
+        }
     }
 }

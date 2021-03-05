@@ -1950,7 +1950,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         virtualFlow.show(parIdx, region);
     }
 
-    private ParagraphBox<PS, SEG, S> getCell(int index) {
+    public ParagraphBox<PS, SEG, S> getCell(int index) {
         return virtualFlow.getCell(index).getNode();
     }
 

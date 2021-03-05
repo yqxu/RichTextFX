@@ -4,10 +4,11 @@ import org.fxmisc.richtext.demo.pdb.commands.CMDNext;
 import org.fxmisc.richtext.demo.pdb.commands.CMDStartDebug;
 import org.fxmisc.richtext.demo.pdb.commands.CMDStep;
 
+import java.io.Closeable;
 import java.util.concurrent.CompletableFuture;
 
 
-public class PDBShell {
+public class PDBShell implements Closeable {
 
     Shell shell;
 
@@ -22,7 +23,7 @@ public class PDBShell {
     public static String defaultDebugCmd = "python3.9 gdpdb.py";
     public static String testFile = "test.py";
 
-    public static PDBShell starDebug(String location)  {
+    public static PDBShell startDebug(String location)  {
         PDBShell pdbShell = new PDBShell();
         pdbShell.setShell(new Shell());
         pdbShell.getShell().startWithCmd(CMDStartDebug.newInstance(location));
@@ -73,7 +74,7 @@ public class PDBShell {
 
 
     public static void main(String args[]){
-        PDBShell pdbShell =  PDBShell.starDebug(testFile);
+        PDBShell pdbShell =  PDBShell.startDebug(testFile);
         CompletableFuture<CMDStep.StepResp> resp2 = pdbShell.step();
         System.out.println("CMD step");
         System.out.println(resp2.join().getCodeStr());
@@ -121,5 +122,9 @@ public class PDBShell {
         int desQSize = pdbShell.getShell().deserializerQ.size();
         System.out.println(respQSize == desQSize && respQSize == 0);
 
+    }
+
+    @Override public void close()  {
+        this.shell.close();
     }
 }

@@ -71,10 +71,12 @@ public class CMDStep implements Command {
             CodeStrParser codeStrParser = CodeStrParser.newInstance();
             lines.stream().findFirst();
             int infoEndLineNumber = 0;
-            for (int i = 0; i < lines.size() ; i++) {
-                if (codeLocationParser.match(lines.get(i))){
-                    infoEndLineNumber = i;
-                    break;
+            if (lines.size() > 2){
+                for (int i = 0; i < lines.size() ; i++) {
+                    if (codeLocationParser.match(lines.get(i))){
+                        infoEndLineNumber = i;
+                        break;
+                    }
                 }
             }
             StringBuilder info = new StringBuilder();
@@ -83,6 +85,7 @@ public class CMDStep implements Command {
                 info.append("\n");
             }
             resp.setInfo(info.toString());
+            System.out.println(lines.get(infoEndLineNumber));
             CodeLocation codeLocation = codeLocationParser.parse(lines.get(infoEndLineNumber));
             String code =  codeStrParser.parse(lines.get(infoEndLineNumber+1));
             resp.setCodeStr(code);
