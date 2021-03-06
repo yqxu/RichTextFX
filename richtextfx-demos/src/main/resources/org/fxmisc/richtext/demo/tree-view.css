@@ -1,0 +1,11 @@
+
+.tree-view {
+    -fx-background-color: #353535;
+}
+
+.tree-cell {
+    -fx-background-color: #353535;
+    -fx-text-fill: #aaaaaa;
+}
+
+

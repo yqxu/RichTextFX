@@ -282,7 +282,7 @@ public class PythonKeywordsDemo extends Application {
         hBox.setPrefHeight(scene.getHeight());
         scene.getStylesheets().add(JavaKeywordsAsyncDemo.class.getResource("java-keywords.css").toExternalForm());
         scene.getStylesheets().add(JavaKeywordsAsyncDemo.class.getResource("idea-style-tool-bar.css").toExternalForm());
-
+        scene.getStylesheets().add(JavaKeywordsAsyncDemo.class.getResource("tree-view.css").toExternalForm());
         primaryStage.setScene(scene);
         primaryStage.setTitle("Java Keywords Demo");
         Platform.runLater(()->codeArea.setTextInsertionStyle(Collections.singleton("normal")));

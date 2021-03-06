@@ -4,7 +4,7 @@
 }
 .button {
     -fx-background-color: #404040;
-    -fx-fill: #aaaaaa;
+    -fx-text-fill: #aaaaaa;
 }
 .tool-bar {
     -fx-background-color: #303030;

@@ -1,5 +1,6 @@
 package org.fxmisc.richtext.demo.pdb;
 
+import org.fxmisc.richtext.demo.pdb.commands.CMDParam;
 import org.fxmisc.richtext.demo.pdb.commands.CMDNext;
 import org.fxmisc.richtext.demo.pdb.commands.CMDStartDebug;
 import org.fxmisc.richtext.demo.pdb.commands.CMDStep;
@@ -38,9 +39,8 @@ public class PDBShell implements Closeable {
         return (CompletableFuture<CMDNext.NextResp>) shell.executeCMD(CMDNext.newInstance());
     }
 
-    public void args(){
-        //TODO：
-        shell.runAsync("args");
+    public CompletableFuture<CMDParam.ParamResp> args(){
+        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDParam.newInstance());
     }
 
     public void continueExe(){
@@ -80,10 +80,13 @@ public class PDBShell implements Closeable {
         System.out.println(resp2.join().getCodeStr());
 
         CompletableFuture<CMDNext.NextResp> resp = pdbShell.next();
+        resp = pdbShell.next();
         System.out.println("CMD next");
         System.out.println(resp.join().getCodeStr());
         System.out.println(resp.join().getCodeLocation().getLineNumber());
         System.out.println(resp.join().getCodeLocation().getFilePath());
+        CompletableFuture<CMDParam.ParamResp> resp3 = pdbShell.args();
+        System.out.println("CMD args");
 
         resp = pdbShell.next();
         System.out.println("CMD next");
