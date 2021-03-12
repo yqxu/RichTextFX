@@ -67,7 +67,7 @@ public class CMDStep implements Command {
 
         @Override public CMDResp<CMDStep> parse(List<String> lines) {
             CMDStep.StepResp resp = new CMDStep.StepResp();
-            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance();
+            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance(future);
             CodeStrParser codeStrParser = CodeStrParser.newInstance();
             lines.stream().findFirst();
             int infoEndLineNumber = 0;

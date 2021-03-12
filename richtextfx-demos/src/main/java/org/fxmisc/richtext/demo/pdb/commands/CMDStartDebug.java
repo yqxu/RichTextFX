@@ -74,7 +74,7 @@ public class CMDStartDebug implements Command {
 
         @Override public CMDResp<CMDStartDebug> parse(List<String> lines) {
             StartDebugResp resp = new StartDebugResp();
-            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance();
+            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance(future);
             CodeStrParser codeStrParser = CodeStrParser.newInstance();
             lines.stream().findFirst();
             int infoEndLineNumber = 0;

@@ -5,15 +5,27 @@ class Foo:
     name = "foo"
     def __init__(self):
         self.pub = "c"
+
     def showName(self):
         name2 = self.name
         return self.pub + name2
+
 # Press ⌃R to execute it or replace it with your code.
 # Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-a =1
-foo = Foo();
-b=2
-c=3
+
+foo = Foo()
+fo = Foo()
+di = dict()
+di.setdefault("fo", fo)
+foo.fo = fo
+foo.di = di
+
+b='\''
+c="\'\'\'\""
+d="\'\'\'"
+e = '\\'
+
+a = [b,c,"a",di,fo,foo,d,e]
 str = inspect.getmembers(foo)
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
 script = '''
@@ -38,4 +50,3 @@ def print_hi(name):
 ast = parse(script)
 
 print(unparse(ast))
-

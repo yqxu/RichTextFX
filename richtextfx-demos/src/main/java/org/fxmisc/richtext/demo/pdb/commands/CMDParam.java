@@ -4,9 +4,14 @@ import org.fxmisc.richtext.demo.pdb.CMDResp;
 import org.fxmisc.richtext.demo.pdb.codec.CodeLocationParser;
 import org.fxmisc.richtext.demo.pdb.codec.CodeStrParser;
 import org.fxmisc.richtext.demo.pdb.codec.Deserializer;
+import org.fxmisc.richtext.demo.pdb.codec.segment.Token;
+import org.fxmisc.richtext.demo.pdb.codec.segment.UnionToken;
+import org.fxmisc.richtext.demo.pdb.deserializer.ParamValueDeserializer;
 import org.fxmisc.richtext.demo.pdb.modules.CodeLocation;
+import org.fxmisc.richtext.demo.pdb.modules.PyType;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
@@ -17,6 +22,11 @@ import java.util.concurrent.CompletableFuture;
  */
 public class CMDParam implements Command {
 
+    public CMDParam(String... args){
+        this.args =  Arrays.asList(args.clone());
+    }
+    public CMDParam(){
+    }
     List<String> args;
 
     public List<String> getArgs() {
@@ -32,69 +42,52 @@ public class CMDParam implements Command {
 
     @Override
     public String getCMDStr(String... args) {
-        if (args == null || args.length <= 0 ){
-            throw new RuntimeException("args can't be empty.");
+        if (this.args==null||this.args.size()<=0){
+            if (args == null || args.length <= 0 ){
+                throw new RuntimeException("args can't be empty.");
+            }
+            this.args = Arrays.asList(args.clone());
         }
-        this.args = Arrays.asList(args.clone());
         String arg = this.args.stream().reduce((arg1,arg2)->arg1+","+arg2).orElse("");
         return "p " + arg;
     }
 
     @Override
-    public ArgsDeserializer newDeserializer() {
-        return  new ArgsDeserializer();
+    public ParamValueDeserializer newDeserializer() {
+        return  new ParamValueDeserializer(args);
     }
 
     public static CMDParam newInstance(){
         CMDParam ret = new CMDParam();
         return ret;
     }
-
-
-    public class ParamResp implements CMDResp<CMDParam> {
-        Map<String,String> valueDisplayMap;
+    public static CMDParam newInstance(String... args){
+        CMDParam ret = new CMDParam(args);
+        return ret;
     }
 
-    public class ArgsDeserializer implements Deserializer<CMDParam>{
-        private CompletableFuture<ParamResp> future = new CompletableFuture<>();
+    public static class ParamResp implements CMDResp<CMDParam> {
+        Map<String,Token> data = new HashMap<>();
 
 
-        @Override public CMDResp<CMDParam> parse(List<String> lines) {
-            ParamResp resp = new ParamResp();
-            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance();
-            CodeStrParser codeStrParser = CodeStrParser.newInstance();
-            lines.stream().findFirst();
-            int infoEndLineNumber = 0;
-            if (lines.size() > 2){
-                for (int i = 0; i < lines.size() ; i++) {
-                    if (codeLocationParser.match(lines.get(i))){
-                        infoEndLineNumber = i;
-                        break;
-                    }
+        public Map<String,Token> getData() {
+            return data;
+        }
+
+        public void setData(Map<String,Token> data) {
+            this.data = data;
+        }
+
+        public void setData(List<String> args,Token token) {
+            if (args.size()>1){
+                List<Token> tokenList = ((UnionToken)token).getDate();
+                for (int i = 0; i < args.size(); i++) {
+                    data.put(args.get(i),tokenList.get(i));
                 }
+            }else {
+                data.put(args.get(0),token);
             }
-            StringBuilder info = new StringBuilder();
-            for (int i = 0; i < infoEndLineNumber; i++ ){
-                info.append(lines.get(i));
-                info.append("\n");
-            }
-            System.out.println(lines.get(infoEndLineNumber));
-            CodeLocation codeLocation = codeLocationParser.parse(lines.get(infoEndLineNumber));
-            String code =  codeStrParser.parse(lines.get(infoEndLineNumber+1));
-            return resp;
         }
-
-        @Override
-        public Exception parseError(String str, BlockingQueue<String> errorQ) {
-            while (errorQ.poll()!=null){
-            }
-            return new RuntimeException("start failed.");
-        }
-
-        @Override
-        public CompletableFuture<ParamResp> future() {
-            return future;
-        }
-
     }
+
 }

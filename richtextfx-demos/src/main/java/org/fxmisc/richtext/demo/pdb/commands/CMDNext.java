@@ -68,7 +68,7 @@ public class CMDNext implements Command {
 
         @Override public CMDResp<CMDNext> parse(List<String> lines) {
             CMDNext.NextResp resp = new CMDNext.NextResp();
-            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance();
+            CodeLocationParser codeLocationParser = CodeLocationParser.newInstance(future);
             CodeStrParser codeStrParser = CodeStrParser.newInstance();
             lines = lines.stream()
                          .map(line->line.replaceAll("\n",""))

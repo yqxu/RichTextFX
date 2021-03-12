@@ -1,9 +1,6 @@
 package org.fxmisc.richtext.demo.pdb;
 
-import org.fxmisc.richtext.demo.pdb.commands.CMDParam;
-import org.fxmisc.richtext.demo.pdb.commands.CMDNext;
-import org.fxmisc.richtext.demo.pdb.commands.CMDStartDebug;
-import org.fxmisc.richtext.demo.pdb.commands.CMDStep;
+import org.fxmisc.richtext.demo.pdb.commands.*;
 
 import java.io.Closeable;
 import java.util.concurrent.CompletableFuture;
@@ -39,9 +36,14 @@ public class PDBShell implements Closeable {
         return (CompletableFuture<CMDNext.NextResp>) shell.executeCMD(CMDNext.newInstance());
     }
 
-    public CompletableFuture<CMDParam.ParamResp> args(){
-        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDParam.newInstance());
+    public CompletableFuture<CMDParam.ParamResp> args(String... args){
+        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDParam.newInstance(args),args);
     }
+
+    public CompletableFuture<CMDParam.ParamResp> detail(String... args){
+        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDDetailInfoAsDict.newInstance(args), args);
+    }
+
 
     public void continueExe(){
         shell.runAsync("continue");
@@ -81,12 +83,38 @@ public class PDBShell implements Closeable {
 
         CompletableFuture<CMDNext.NextResp> resp = pdbShell.next();
         resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
+        resp = pdbShell.next();
         System.out.println("CMD next");
         System.out.println(resp.join().getCodeStr());
         System.out.println(resp.join().getCodeLocation().getLineNumber());
         System.out.println(resp.join().getCodeLocation().getFilePath());
-        CompletableFuture<CMDParam.ParamResp> resp3 = pdbShell.args();
+        CompletableFuture<CMDParam.ParamResp> resp3 = pdbShell.args("a");
         System.out.println("CMD args");
+        System.out.println(resp3.join().getData().values());
+
+
+        CompletableFuture<CMDParam.ParamResp> resp4 = pdbShell.args("sadfasdf","fsdafsadf");
+        resp4.exceptionally(e ->{
+            System.out.println(e.getMessage());
+            return null;
+        });
+
+        CompletableFuture<CMDParam.ParamResp> resp5 = pdbShell.args("a.fo");
+        resp5.exceptionally(e ->{
+            System.out.println(e.getMessage());
+            return null;
+        });
 
         resp = pdbShell.next();
         System.out.println("CMD next");
@@ -115,11 +143,15 @@ public class PDBShell implements Closeable {
         System.out.println(resp.join().getCodeLocation().getLineNumber());
         System.out.println(resp.join().getCodeLocation().getFilePath());
 
+        CompletableFuture<CMDParam.ParamResp> resp6 = pdbShell.detail("foo.di");
+        System.out.println(resp6.join().getData().values());
+
         resp = pdbShell.next();
         System.out.println("CMD next");
-        System.out.println(resp.join().getCodeStr());
-        System.out.println(resp.join().getCodeLocation().getLineNumber());
-        System.out.println(resp.join().getCodeLocation().getFilePath());
+        resp.exceptionally(e->{
+            System.out.println(e.getMessage());
+            return null;
+        });
 
         int respQSize = pdbShell.getShell().responseQ.size();
         int desQSize = pdbShell.getShell().deserializerQ.size();

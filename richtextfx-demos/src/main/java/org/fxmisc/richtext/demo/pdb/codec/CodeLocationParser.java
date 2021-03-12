@@ -4,14 +4,24 @@ import org.fxmisc.richtext.demo.pdb.modules.CodeLocation;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class CodeLocationParser implements LineParser {
+
+    public CodeLocationParser(CompletableFuture future){
+        this.future = future;
+    }
+    private CompletableFuture future;
 
     //(Pdb) > /Users/yq/Documents/RichTextFX/test.py(2)<module>()
     @Override
     public CodeLocation parse(String str) {
         CodeLocation codeLocation = new CodeLocation();
         str = str.replaceAll("\\(Pdb\\) ","");
+        if (str.startsWith("--Return--")){
+            future.completeExceptionally(new RuntimeException("Debug end."));
+            return null;
+        }
         int idxFileStart = str.indexOf("> ")+1;
         int idxFileEnd = str.indexOf("(",idxFileStart);
         int idxLineNumberStart = idxFileEnd + 1;
@@ -25,8 +35,8 @@ public class CodeLocationParser implements LineParser {
         return str.contains("> ");
     }
 
-    public static CodeLocationParser newInstance() {
-         CodeLocationParser parser = new CodeLocationParser();
+    public static CodeLocationParser newInstance(CompletableFuture future) {
+         CodeLocationParser parser = new CodeLocationParser(future);
         return parser;
     }
 }
