@@ -73,20 +73,18 @@ public class PythonKeywordsDemo extends Application {
     private static final String COMMENT_PATTERN = "#[^\n]*" + "|" + "/\\*(.|\\R)*?\\*/"   // for whole text processing (text blocks)
     		                          + "|" + "/\\*[^\\v]*" + "|" + "^\\h*\\*([^\\v]*|/)";  // for visible paragraph processing (line by line)
 
-    private static String sampleCode =
-            "#!/Users/yq/PycharmProjects/pythonProject/venv/bin/python\n" +
-            "# -*- coding: utf-8 -*-\n" +
-            "import re\n" +
-            "import sys\n" +
-            "from pip._internal.cli.main import main\n" +
-            "if __name__ == '__main__':\n" +
-            "    sys.argv[0] = re.sub(r'(-script\\.pyw|\\.exe)?$', '', sys.argv[0])\n" +
-            "    sys.exit(main())\n";
 
-    private static String debugCode = "from ast import *\n" + "# This is a sample Python script.\n" + "\n"
+
+    private static String debugCode = "from ast import *\n" + "import inspect\n" + "# This is a sample Python script.\n"
+                                      + "class Foo:\n" + "    name = \"foo\"\n" + "    def __init__(self):\n"
+                                      + "        self.pub = \"c\"\n" + "\n" + "    def showName(self):\n"
+                                      + "        name2 = self.name\n" + "        return self.pub + name2\n" + "\n"
                                       + "# Press ⌃R to execute it or replace it with your code.\n"
                                       + "# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.\n"
-                                      + "\n" + "\n" + "\n"
+                                      + "\n" + "foo = Foo()\n" + "fo = Foo()\n" + "di = dict()\n"
+                                      + "di.setdefault(\"fo\", fo)\n" + "foo.fo = fo\n" + "foo.di = di\n" + "\n"
+                                      + "b='\\''\n" + "c=\"\\'\\'\\'\\\"\"\n" + "d=\"\\'\\'\\'\"\n" + "e = '\\\\'\n"
+                                      + "\n" + "a = [b,c,\"a\",di,fo,foo,d,e]\n" + "str = inspect.getmembers(foo)\n"
                                       + "# See PyCharm help at https://www.jetbrains.com/help/pycharm/\n"
                                       + "script = '''\n" + "\n" + "def print_hi(name):\n"
                                       + "    # Use a breakpoint in the code line below to debug your script.\n"
@@ -95,7 +93,7 @@ public class PythonKeywordsDemo extends Application {
                                       + "if __name__ == '__main__':\n" + "    print_hi('PyCharm')\n"
                                       + "print(\"aaa test\")\n" + "'''\n" + "\n" + "astwitherror = '''\n"
                                       + "def print_hi(name):\n" + "    p\n" + "'''\n" + "\n" + "\n"
-                                      + "ast = parse(script)\n" + "\n" + "print(unparse(ast))\n" + "\n";
+                                      + "ast = parse(script)\n" + "\n" + "print(unparse(ast))\n";
 
     private static final Pattern PATTERN = Pattern.compile(
             "(?<KEYWORD>" + KEYWORD_PATTERN + ")"
