@@ -7,9 +7,9 @@ import org.fxmisc.richtext.model.StyledDocument;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class CustomCodeArea extends CodeArea {
-
     private List<TextInsertionListener> insertionListeners;
 
     public CustomCodeArea() {
@@ -43,5 +43,6 @@ public class CustomCodeArea extends CodeArea {
 
         super.replace(start, end, replacement);
     }
+
 
 }

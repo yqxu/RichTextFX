@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class PDBShell implements Closeable {
 
-    Shell shell;
+    Shell shell = new Shell();
 
     public void setShell(Shell shell) {
         this.shell = shell;
