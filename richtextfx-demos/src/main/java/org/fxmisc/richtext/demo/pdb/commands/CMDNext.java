@@ -1,6 +1,7 @@
 package org.fxmisc.richtext.demo.pdb.commands;
 
 import org.fxmisc.richtext.demo.pdb.CMDResp;
+import org.fxmisc.richtext.demo.pdb.DebugEndException;
 import org.fxmisc.richtext.demo.pdb.codec.CodeLocationParser;
 import org.fxmisc.richtext.demo.pdb.codec.CodeStrParser;
 import org.fxmisc.richtext.demo.pdb.codec.Deserializer;
@@ -24,7 +25,7 @@ public class CMDNext implements Command {
 
     @Override
     public NextDeserializer newDeserializer() {
-        return  new NextDeserializer();
+        return  new NextDeserializer(this);
     }
 
     public static CMDNext newInstance(){
@@ -63,10 +64,14 @@ public class CMDNext implements Command {
     }
 
     public class NextDeserializer implements Deserializer<CMDNext>{
+        NextDeserializer(CMDNext cmd){
+            this.cmd = cmd;
+        }
+        private CMDNext cmd;
         private CompletableFuture<NextResp> future = new CompletableFuture<>();
 
 
-        @Override public CMDResp<CMDNext> parse(List<String> lines) {
+        @Override public CMDResp<CMDNext> parse(List<String> lines) throws DebugEndException{
             CMDNext.NextResp resp = new CMDNext.NextResp();
             CodeLocationParser codeLocationParser = CodeLocationParser.newInstance(future);
             CodeStrParser codeStrParser = CodeStrParser.newInstance();
@@ -90,7 +95,12 @@ public class CMDNext implements Command {
                 info.append("\n");
             }
             resp.setInfo(info.toString());
-            CodeLocation codeLocation = codeLocationParser.parse(lines.get(infoEndLineNumber));
+            CodeLocation codeLocation;
+            try{
+                codeLocation = codeLocationParser.parse(lines.get(infoEndLineNumber));
+            }catch (DebugEndException debugEndException){
+                throw  debugEndException;
+            }
             if (infoEndLineNumber+1<lines.size()){
                 String code =  codeStrParser.parse(lines.get(infoEndLineNumber+1));
                 resp.setCodeStr(code);
@@ -109,6 +119,10 @@ public class CMDNext implements Command {
         @Override
         public CompletableFuture<NextResp> future() {
             return future;
+        }
+
+        @Override public CMDNext getCMD() {
+            return cmd;
         }
 
     }

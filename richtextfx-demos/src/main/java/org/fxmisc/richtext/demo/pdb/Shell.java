@@ -2,12 +2,12 @@ package org.fxmisc.richtext.demo.pdb;
 
 import org.fxmisc.richtext.demo.pdb.codec.Deserializer;
 import org.fxmisc.richtext.demo.pdb.codec.LineSegment;
+import org.fxmisc.richtext.demo.pdb.commands.CMDStartDebug;
 import org.fxmisc.richtext.demo.pdb.commands.Command;
 
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Condition;
 
 import static java.lang.Thread.sleep;
 
@@ -34,7 +34,7 @@ public class Shell implements Closeable{
 
 
 
-    public <T extends Command> CompletableFuture<? extends CMDResp<T>> executeCMD(T cmd,String... args) {
+    public synchronized  <T extends Command> CompletableFuture<? extends CMDResp<T>> executeCMD(T cmd) {
         Deserializer deserializer = cmd.newDeserializer();
         try {
             deserializerQ.put(deserializer);
@@ -42,7 +42,6 @@ public class Shell implements Closeable{
             deserializer.future().completeExceptionally(e);
             return deserializer.future();
         }
-        runAsync(cmd.getCMDStr(args));
         return deserializer.future();
     }
 
@@ -54,6 +53,8 @@ public class Shell implements Closeable{
 
     public  CompletableFuture<CMDResp>  startWithCmd(Command cmd) {
         try {
+            File file = new File("log.txt");
+            file.delete();
             process = exec(cmd);
         } catch (IOException e) {
             CompletableFuture<CMDResp>  fu = new CompletableFuture();
@@ -63,35 +64,38 @@ public class Shell implements Closeable{
         cmdPipe = process.getOutputStream();
         try {
             File file = new File("log.txt");
+            if (!file.exists()){
+                file.createNewFile();
+            }
             FileInputStream in = new FileInputStream(file);
             normalResponse = in;
         } catch (IOException e) {
             e.printStackTrace();
         }
         errorResponse = process.getErrorStream();
-        Deserializer de = cmd.newDeserializer();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(normalResponse));
+        InputStreamReader reader = new InputStreamReader(normalResponse);
         BufferedReader readerError = new BufferedReader(new InputStreamReader(errorResponse));
-        try {
-            deserializerQ.put(de);
-        } catch (InterruptedException e) {
-            de.future().completeExceptionally(e);
-            return de.future();
-        }
+        StringBuilder ll = new StringBuilder();
         CompletableFuture.runAsync(()->{
             try {
-                String line;
-                while(true){
-                    boolean readded = false;
-                    while(!stopProcess&&(line = reader.readLine()) != null){
-                        responseQ.put(line);
-                        readded = true;
+                Character c;
+                while(!stopProcess){
+                    int i = reader.read();
+                    if (i == -1 ){
+                        if (ll.toString().equals("(Pdb) ")){
+                            responseQ.put(ll.toString());
+                            ll.delete(0,ll.length());
+                        }
+                        sleep(500);
+                        continue;
                     }
-                    if (readded){
-                        responseQ.put("\n");
-                        readded = false;
+                    c = (char)i;
+                    if (c == '\n'){
+                        responseQ.put(ll.toString());
+                        ll.delete(0,ll.length());
+                    }else{
+                        ll.append(c);
                     }
-                    sleep(500);
                 }
             }catch (Exception e){
                 e.printStackTrace();
@@ -109,36 +113,40 @@ public class Shell implements Closeable{
             }
 
         },  threadError);
+
+        try {
+            while(true){
+                if(responseQ.take().contains("(Pdb)")){
+                    break;
+                }
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         CompletableFuture.runAsync(()->{
             while(!stopProcess){
                 try {
+                    Deserializer deserializer = deserializerQ.take();
+                    Command c = deserializer.getCMD();
+                    runAsync(c.getCMDStr());
                     List<String> resultLines = new ArrayList<>();
-                    String line = responseQ.take();
-                    if ("\n".equals(line)){
-                        continue;
-                    }
-                    if("(Pdb) ".equals(line)){
-                        String l = responseQ.take();
-                        while ("\n".equals(l)){
-                            l = responseQ.take();
-                        }
-                        line = line + l;
-                    }
                     while(true){
-                        resultLines.add(line);
-                        if(LineSegment.needSegment(line,responseQ.peek())){
+                        String line = responseQ.take();
+                        if(LineSegment.needSegment(line)){
                             break;
                         }
-                        line = responseQ.take();
+                        resultLines.add(line);
                     }
                     if (resultLines.size()==1&&resultLines.get(0).equals("(Pdb) ")){
                         continue;
                     }
-                    Deserializer deserializer = deserializerQ.take();
                     System.out.println(resultLines);
-                    CMDResp resp = deserializer.parse(resultLines);
-                    if (!deserializer.future().isCompletedExceptionally()){
+                    CMDResp resp;
+                    try{
+                        resp = deserializer.parse(resultLines);
                         deserializer.future().complete(resp);
+                    }catch (Exception e){
+                        deserializer.future().completeExceptionally(e);
                     }
                 }catch (Exception e){
                     e.printStackTrace();
@@ -146,21 +154,10 @@ public class Shell implements Closeable{
             }
 
         },  threadRespDeserializer);
-        CompletableFuture.runAsync(()->{
-            try {
-                while(!stopProcess){
-                    String line = errorQ.take();
-                    Deserializer deserializer = deserializerQ.take();
-                    Exception exp = deserializer.parseError(line,errorQ);
-                    deserializer.future().completeExceptionally(exp);
-                }
-            }catch (Exception e){
-            }
-        },  threadErrorDeserializer);
-        return de.future();
+        return CompletableFuture.completedFuture(new CMDStartDebug.StartDebugResp());
     }
 
-    void runAsync(String cmd){
+    synchronized void runAsync(String cmd){
         try {
             cmdPipe.write((cmd+"\n").getBytes());
             cmdPipe.flush();

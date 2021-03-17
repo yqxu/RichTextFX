@@ -11,11 +11,12 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 
 public class ParamValueDeserializer implements Deserializer<CMDParam> {
-
+    CMDParam cmd;
     List<String> paramNames;
     CompletableFuture<CMDParam.ParamResp> future = new CompletableFuture<>();
-    public ParamValueDeserializer(List<String> args){
-        this.paramNames = args;
+    public ParamValueDeserializer(CMDParam cmd){
+        this.paramNames = cmd.getArgs();
+        this.cmd = cmd;
     }
 
     @Override public CMDResp<CMDParam> parse(List<String> lines) {
@@ -42,5 +43,9 @@ public class ParamValueDeserializer implements Deserializer<CMDParam> {
 
     @Override public CompletableFuture<? extends CMDResp<CMDParam>> future() {
         return future;
+    }
+
+    @Override public CMDParam getCMD() {
+        return cmd;
     }
 }

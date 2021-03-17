@@ -13,4 +13,5 @@ public interface Deserializer<CMD extends Command> {
     CMDResp<CMD> parse(List<String> lines);
     Exception parseError(String str, BlockingQueue<String> errorQ);
     CompletableFuture<? extends CMDResp<CMD>> future();
+    CMD getCMD();
 }

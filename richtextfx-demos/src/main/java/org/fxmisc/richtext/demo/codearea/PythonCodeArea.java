@@ -7,11 +7,10 @@ import org.fxmisc.richtext.*;
 import org.fxmisc.richtext.demo.brackethighlighter.BracketHighlighter;
 import org.fxmisc.richtext.demo.brackethighlighter.CustomCodeArea;
 import org.fxmisc.richtext.demo.menu.CodeAreaMenu;
-import org.fxmisc.richtext.model.Paragraph;
-import org.fxmisc.richtext.model.StyleSpans;
-import org.fxmisc.richtext.model.StyleSpansBuilder;
+import org.fxmisc.richtext.model.*;
 import org.reactfx.collection.ListModification;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.function.Consumer;
@@ -141,8 +140,14 @@ public class PythonCodeArea extends CustomCodeArea {
 
     public void showCode(String  debugCode) {
         // auto-indent: insert previous line's indents on enter
-        this.replaceText(0, 0, debugCode);
+        this.replaceText(0, this.lengthProperty().getValue(), debugCode);
     }
+
+    public void showCode(StyledDocument document) {
+        // auto-indent: insert previous line's indents on enter
+        this.replace(0, this.lengthProperty().getValue(), document);
+    }
+
 
     private StyleSpans<Collection<String>> computeHighlighting(String text) {
         Matcher matcher = PATTERN.matcher(text);

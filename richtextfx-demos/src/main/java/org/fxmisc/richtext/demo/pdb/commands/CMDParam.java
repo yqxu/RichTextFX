@@ -1,21 +1,14 @@
 package org.fxmisc.richtext.demo.pdb.commands;
 
 import org.fxmisc.richtext.demo.pdb.CMDResp;
-import org.fxmisc.richtext.demo.pdb.codec.CodeLocationParser;
-import org.fxmisc.richtext.demo.pdb.codec.CodeStrParser;
-import org.fxmisc.richtext.demo.pdb.codec.Deserializer;
 import org.fxmisc.richtext.demo.pdb.codec.segment.Token;
 import org.fxmisc.richtext.demo.pdb.codec.segment.UnionToken;
 import org.fxmisc.richtext.demo.pdb.deserializer.ParamValueDeserializer;
-import org.fxmisc.richtext.demo.pdb.modules.CodeLocation;
-import org.fxmisc.richtext.demo.pdb.modules.PyType;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * @author yq
@@ -54,7 +47,7 @@ public class CMDParam implements Command {
 
     @Override
     public ParamValueDeserializer newDeserializer() {
-        return  new ParamValueDeserializer(args);
+        return  new ParamValueDeserializer(this);
     }
 
     public static CMDParam newInstance(){
@@ -67,25 +60,22 @@ public class CMDParam implements Command {
     }
 
     public static class ParamResp implements CMDResp<CMDParam> {
-        Map<String,Token> data = new HashMap<>();
+        Map<String,Token> date = new HashMap<>();
 
-
-        public Map<String,Token> getData() {
-            return data;
+        public Map<String,Token> getDate() {
+            return date;
         }
 
-        public void setData(Map<String,Token> data) {
-            this.data = data;
+        public void setDate(Map<String,Token> date) {
+            this.date = date;
         }
 
         public void setData(List<String> args,Token token) {
             if (args.size()>1){
-                List<Token> tokenList = ((UnionToken)token).getDate();
-                for (int i = 0; i < args.size(); i++) {
-                    data.put(args.get(i),tokenList.get(i));
-                }
+                Map<String,Token> tokenMap = ((UnionToken)token).getMap(args);
+                this.date = tokenMap;
             }else {
-                data.put(args.get(0),token);
+                date.put(args.get(0), token);
             }
         }
     }

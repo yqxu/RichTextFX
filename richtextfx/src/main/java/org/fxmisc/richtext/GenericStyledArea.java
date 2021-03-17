@@ -2007,7 +2007,7 @@ public class GenericStyledArea<PS, SEG, S> extends Region
         }
     }
 
-    private void suspendVisibleParsWhile(Runnable runnable) {
+    protected void suspendVisibleParsWhile(Runnable runnable) {
         Suspendable.combine(beingUpdated, visibleParagraphs).suspendWhile(runnable);
     }
 

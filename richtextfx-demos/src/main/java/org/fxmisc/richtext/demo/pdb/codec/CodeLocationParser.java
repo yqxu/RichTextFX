@@ -1,5 +1,6 @@
 package org.fxmisc.richtext.demo.pdb.codec;
 
+import org.fxmisc.richtext.demo.pdb.DebugEndException;
 import org.fxmisc.richtext.demo.pdb.modules.CodeLocation;
 
 import java.util.HashMap;
@@ -15,20 +16,25 @@ public class CodeLocationParser implements LineParser {
 
     //(Pdb) > /Users/yq/Documents/RichTextFX/test.py(2)<module>()
     @Override
-    public CodeLocation parse(String str) {
-        CodeLocation codeLocation = new CodeLocation();
-        str = str.replaceAll("\\(Pdb\\) ","");
-        if (str.startsWith("--Return--")){
-            future.completeExceptionally(new RuntimeException("Debug end."));
-            return null;
+    public CodeLocation parse(String str) throws DebugEndException {
+        try{
+            CodeLocation codeLocation = new CodeLocation();
+            str = str.replaceAll("\\(Pdb\\) ","");
+            if (str.startsWith("--Return--")){
+                DebugEndException exp = new DebugEndException("Debug end.");
+                throw exp;
+            }
+            int idxFileStart = str.indexOf("> ")+1;
+            int idxFileEnd = str.indexOf("(",idxFileStart);
+            int idxLineNumberStart = idxFileEnd + 1;
+            int idxLineNumberEnd = str.indexOf(")",idxLineNumberStart);
+            codeLocation.setFilePath(str.substring(idxFileStart,idxFileEnd));
+            codeLocation.setLineNumber(Integer.parseInt(str.substring(idxLineNumberStart,idxLineNumberEnd)));
+            return codeLocation;
+        }catch (Exception e){
+            return new CodeLocation();
         }
-        int idxFileStart = str.indexOf("> ")+1;
-        int idxFileEnd = str.indexOf("(",idxFileStart);
-        int idxLineNumberStart = idxFileEnd + 1;
-        int idxLineNumberEnd = str.indexOf(")",idxLineNumberStart);
-        codeLocation.setFilePath(str.substring(idxFileStart,idxFileEnd));
-        codeLocation.setLineNumber(Integer.parseInt(str.substring(idxLineNumberStart,idxLineNumberEnd)));
-        return codeLocation;
+
     }
 
     @Override public boolean match(String str) {

@@ -29,7 +29,7 @@ public class CMDStartDebug implements Command {
 
     @Override
     public StartDebugDeserializer newDeserializer() {
-        return  new StartDebugDeserializer();
+        return  new StartDebugDeserializer(this);
     }
 
     public static CMDStartDebug newInstance(String fileLocation){
@@ -38,7 +38,7 @@ public class CMDStartDebug implements Command {
         return ret;
     }
 
-    public class StartDebugResp implements CMDResp<CMDStartDebug> {
+    public static class StartDebugResp implements CMDResp<CMDStartDebug> {
         String info;
         CodeLocation codeLocation;
         String codeStr;
@@ -69,8 +69,11 @@ public class CMDStartDebug implements Command {
     }
 
     public class StartDebugDeserializer implements Deserializer<CMDStartDebug>{
+        StartDebugDeserializer(CMDStartDebug cmd){
+            this.cmd = cmd;
+        }
         private CompletableFuture<StartDebugResp> future = new CompletableFuture<>();
-
+        private CMDStartDebug cmd;
 
         @Override public CMDResp<CMDStartDebug> parse(List<String> lines) {
             StartDebugResp resp = new StartDebugResp();
@@ -109,6 +112,10 @@ public class CMDStartDebug implements Command {
         @Override
         public CompletableFuture<StartDebugResp> future() {
             return future;
+        }
+
+        @Override public CMDStartDebug getCMD() {
+            return cmd;
         }
 
     }

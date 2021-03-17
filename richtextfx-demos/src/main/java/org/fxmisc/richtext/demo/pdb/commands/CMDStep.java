@@ -23,7 +23,7 @@ public class CMDStep implements Command {
 
     @Override
     public StepDeserializer newDeserializer() {
-        return  new StepDeserializer();
+        return  new StepDeserializer(this);
     }
 
     public static CMDStep newInstance(){
@@ -62,9 +62,12 @@ public class CMDStep implements Command {
     }
 
     public class StepDeserializer implements Deserializer<CMDStep>{
+        StepDeserializer(CMDStep cmd){
+            this.cmd = cmd;
+        }
         private CompletableFuture<StepResp> future = new CompletableFuture<>();
 
-
+        private CMDStep cmd;
         @Override public CMDResp<CMDStep> parse(List<String> lines) {
             CMDStep.StepResp resp = new CMDStep.StepResp();
             CodeLocationParser codeLocationParser = CodeLocationParser.newInstance(future);
@@ -103,6 +106,10 @@ public class CMDStep implements Command {
         @Override
         public CompletableFuture<StepResp> future() {
             return future;
+        }
+
+        @Override public CMDStep getCMD() {
+            return cmd;
         }
 
     }

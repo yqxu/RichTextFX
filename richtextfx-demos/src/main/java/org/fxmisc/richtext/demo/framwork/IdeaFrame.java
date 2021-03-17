@@ -22,8 +22,10 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class IdeaFrame extends Application {
-
-    private WorkSpace workSpace = new WorkSpace("test.py","test.py");
+    public static WorkSpace currentWorkSpace(){
+        return workSpace;
+    }
+    private static WorkSpace workSpace;
     private PythonCodeArea codeArea;
     private Stage primaryStage;
     private VBox vBox = new VBox();
@@ -32,16 +34,21 @@ public class IdeaFrame extends Application {
         launch(args);
     }
 
+    public PythonCodeArea getCodeArea() {
+        return codeArea;
+    }
+
+    public void setCodeArea(PythonCodeArea codeArea) {
+        this.codeArea = codeArea;
+    }
+
     @Override
     public void start(Stage primaryStage) {
+        workSpace = new WorkSpace("test.py","test.py",this);
         codeArea = new PythonCodeArea();
         this.primaryStage = primaryStage;
-        Optional<List<String>> opStr =  PyFileReader.readFileAsCode(workSpace.getDefaultOpenFile());
-        opStr.ifPresent((list)->{
-            codeArea.showCode(list.stream().collect(Collectors.joining("\n")));
-        });
+        workSpace.showFile(workSpace.getDefaultOpenFile());
         ToolBar toolBar = new DebugToolBar(codeArea);
-
         vBox.getChildren().add(toolBar);
         hBox.setPrefWidth(vBox.getPrefWidth());
         hBox.setFillHeight(true);
@@ -81,13 +88,13 @@ public class IdeaFrame extends Application {
     }
 
     private void autoScale(){
-        primaryStage.widthProperty().addListener(new ChangeListener<Number>() {//监听窗口的宽
+        primaryStage.widthProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 codeArea.setPrefWidth((Double) newValue);
             }
         });
-        primaryStage.heightProperty().addListener(new ChangeListener<Number>() {//监听窗口的高
+        primaryStage.heightProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
                 codeArea.setPrefHeight((Double) newValue);

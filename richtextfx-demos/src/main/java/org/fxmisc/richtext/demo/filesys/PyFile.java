@@ -1,5 +1,13 @@
 package org.fxmisc.richtext.demo.filesys;
 
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.StyledDocument;
+
+import java.io.FileReader;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
 /**
  * @author yq
  */
@@ -28,4 +36,6 @@ public class PyFile {
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
+
+
 }

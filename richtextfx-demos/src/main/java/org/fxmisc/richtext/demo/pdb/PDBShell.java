@@ -21,12 +21,6 @@ public class PDBShell implements Closeable {
     public static String defaultDebugCmd = "python3.9 gdpdb.py";
     public static String testFile = "test.py";
 
-    public static PDBShell startDebug(String location)  {
-        PDBShell pdbShell = new PDBShell();
-        pdbShell.setShell(new Shell());
-        pdbShell.getShell().startWithCmd(CMDStartDebug.newInstance(location));
-        return pdbShell;
-    }
 
     public CompletableFuture<CMDStep.StepResp> step(){
         return (CompletableFuture<CMDStep.StepResp>) shell.executeCMD(CMDStep.newInstance());
@@ -37,11 +31,11 @@ public class PDBShell implements Closeable {
     }
 
     public CompletableFuture<CMDParam.ParamResp> args(String... args){
-        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDParam.newInstance(args),args);
+        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDParam.newInstance(args));
     }
 
     public CompletableFuture<CMDParam.ParamResp> detail(String... args){
-        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDDetailInfoAsDict.newInstance(args), args);
+        return (CompletableFuture<CMDParam.ParamResp>) shell.executeCMD(CMDDetailInfoAsDict.newInstance(args));
     }
 
 
@@ -76,7 +70,7 @@ public class PDBShell implements Closeable {
 
 
     public static void main(String args[]){
-        PDBShell pdbShell =  PDBShell.startDebug(testFile);
+        PDBShell pdbShell =  PDBContext.startDebug(PDBContext.currentDebugPossessName,testFile);
         CompletableFuture<CMDStep.StepResp> resp2 = pdbShell.step();
         System.out.println("CMD step");
         System.out.println(resp2.join().getCodeStr());
@@ -101,7 +95,7 @@ public class PDBShell implements Closeable {
         System.out.println(resp.join().getCodeLocation().getFilePath());
         CompletableFuture<CMDParam.ParamResp> resp3 = pdbShell.args("a");
         System.out.println("CMD args");
-        System.out.println(resp3.join().getData().values());
+        System.out.println(resp3.join().getDate().values());
 
 
         CompletableFuture<CMDParam.ParamResp> resp4 = pdbShell.args("sadfasdf","fsdafsadf");
@@ -144,7 +138,7 @@ public class PDBShell implements Closeable {
         System.out.println(resp.join().getCodeLocation().getFilePath());
 
         CompletableFuture<CMDParam.ParamResp> resp6 = pdbShell.detail("foo.di");
-        System.out.println(resp6.join().getData().values());
+        System.out.println(resp6.join().getDate().values());
 
         resp = pdbShell.next();
         System.out.println("CMD next");
@@ -156,6 +150,8 @@ public class PDBShell implements Closeable {
         int respQSize = pdbShell.getShell().responseQ.size();
         int desQSize = pdbShell.getShell().deserializerQ.size();
         System.out.println(respQSize == desQSize && respQSize == 0);
+        System.out.println(respQSize);
+        System.out.println(desQSize);
 
     }
 

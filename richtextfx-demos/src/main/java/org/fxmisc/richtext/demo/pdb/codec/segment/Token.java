@@ -6,4 +6,5 @@ public interface Token<T> {
     void setWrapper(String str);
     Character endCharacter();
     void addElement(TempToken token);
+
 }

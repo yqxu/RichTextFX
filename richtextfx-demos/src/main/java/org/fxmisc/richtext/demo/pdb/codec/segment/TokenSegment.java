@@ -32,10 +32,10 @@ public class TokenSegment {
     }
     private static Set<Character> tokenEnd = new HashSet<>();
     static {
-        tokenStart.add('}');
-        tokenStart.add(')');
-        tokenStart.add(']');
-        tokenStart.add('>');
+        tokenEnd.add('}');
+        tokenEnd.add(')');
+        tokenEnd.add(']');
+        tokenEnd.add('>');
     }
     private static Character seprator = ',';
 
@@ -51,6 +51,9 @@ public class TokenSegment {
             char currentCharI = str.charAt(i);
             if (tokenStart.contains(currentCharI)){
                 Token tempToken = TokenFactory.tokenInstance(currentCharI);
+                if (tempToken==null){
+                    System.out.println("can't init:"+currentCharI);
+                }
                 String wrap = "" + currentCharI + symbolMap.get(currentCharI);
                 tempToken.setWrapper(wrap);
                 Character end = symbolMap.get(currentCharI);
